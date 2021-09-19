@@ -34,16 +34,16 @@ Send SSH logins to Virustotal
 import datetime
 import json
 import os
-from typing import Any
+from typing import Any, Dict
 from urllib.parse import urlencode, urlparse
+
+from zope.interface import implementer
 
 from twisted.internet import defer, reactor
 from twisted.internet.ssl import ClientContextFactory
 from twisted.python import log
 from twisted.web import client, http_headers
 from twisted.web.iweb import IBodyProducer
-
-from zope.interface import implementer
 
 import cowrie.core.output
 from cowrie.core.config import CowrieConfig
@@ -65,6 +65,7 @@ class Output(cowrie.core.output.Output):
     agent: Any
     scan_url: bool
     scan_file: bool
+    url_cache: Dict[str, float] = {}  # url and last time succesfully submitted
 
     def start(self):
         """
@@ -97,7 +98,7 @@ class Output(cowrie.core.output.Output):
         """
         pass
 
-    def write(self, entry: dict) -> None:
+    def write(self, entry: Dict[str, Any]) -> None:
         if entry["eventid"] == "cowrie.session.file_download":
             if self.scan_url and "url" in entry:
                 log.msg("Checking url scan report at VT")
@@ -238,7 +239,7 @@ class Output(cowrie.core.output.Output):
         fields = {("apikey", self.apiKey)}
         files = {("file", fileName, open(artifact, "rb"))}
         if self.debug:
-            log.msg("submitting to VT: {}".format(repr(files)))
+            log.msg(f"submitting to VT: {repr(files)}")
         contentType, body = encode_multipart_formdata(fields, files)
         producer = StringProducer(body)
         headers = http_headers.Headers(
@@ -293,6 +294,10 @@ class Output(cowrie.core.output.Output):
         """
         Check url scan report for a hash
         """
+        if entry["url"] in self.url_cache:
+            log.msg("output_virustotal: url {} was already successfully submitted".format(entry["url"]))
+            return
+
         vtUrl = f"{VTAPI_URL}url/report".encode("utf8")
         headers = http_headers.Headers({"User-Agent": [COWRIE_USER_AGENT]})
         fields = {
@@ -341,13 +346,16 @@ class Output(cowrie.core.output.Output):
             j = json.loads(result)
             log.msg("VT: {}".format(j["verbose_msg"]))
 
+            # we got a status=200 assume it was successfully submitted
+            self.url_cache[entry["url"]] = datetime.datetime.now()
+
             if j["response_code"] == 0:
                 log.msg(
                     eventid="cowrie.virustotal.scanurl",
                     format="VT: New URL %(url)s",
                     session=entry["session"],
                     url=entry["url"],
-                    is_new="true",
+                    is_new="true"
                 )
                 return d
             elif j["response_code"] == 1 and "scans" not in j:
@@ -377,7 +385,7 @@ class Output(cowrie.core.output.Output):
                 )
                 log.msg("VT: permalink: {}".format(j["permalink"]))
             elif j["response_code"] == -2:
-                log.msg("VT: response=1: this has been queued for analysis already")
+                log.msg("VT: response=-2: this has been queued for analysis already")
                 log.msg("VT: permalink: {}".format(j["permalink"]))
             else:
                 log.msg("VT: unexpected response code: {}".format(j["response_code"]))

@@ -22,7 +22,8 @@ lint:
 
 .PHONY: clean
 clean:
-	rm -rf _trial_temp build dist
+	rm -rf _trial_temp build dist src/_trial_temp src/Cowrie.egg-info
+	make -C docs clean
 
 .PHONY: pre-commit
 pre-commit:
@@ -48,5 +49,5 @@ dependency-upgrade:
 	git checkout -b "dependency-upgrade-`date -u +%Y-%m-%d`"
 	pur -r requirements.txt
 	pur -r requirements-dev.txt
-	pur --skip csirtgsdk -r requirements-output.txt
+	pur -r requirements-output.txt
 	git commit -m "dependency upgrade `date -u`" requirements*.txt

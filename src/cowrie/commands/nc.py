@@ -1,4 +1,5 @@
 import getopt
+import ipaddress
 import re
 import socket
 import struct
@@ -40,14 +41,7 @@ def addressInNetwork(ip, net):
     return ip & net == net
 
 
-local_networks = [
-    networkMask("10.0.0.0", 8),
-    networkMask("172.16.0.0", 12),
-    networkMask("192.168.0.0", 16),
-]
-
-
-class command_nc(HoneyPotCommand):
+class Command_nc(HoneyPotCommand):
     """
     netcat
     """
@@ -100,10 +94,9 @@ usage: nc [-46bCDdhjklnrStUuvZz] [-I length] [-i interval] [-O length]
             self.exit()
             return
 
-        for net in local_networks:
-            if addressInNetwork(address, net):
-                self.exit()
-                return
+        if ipaddress.ip_address(address).is_private:
+            self.exit()
+            return
 
         out_addr = None
         try:
@@ -146,5 +139,5 @@ usage: nc [-46bCDdhjklnrStUuvZz] [-I length] [-i interval] [-O length]
             self.s.close()
 
 
-commands["/bin/nc"] = command_nc
-commands["nc"] = command_nc
+commands["/bin/nc"] = Command_nc
+commands["nc"] = Command_nc

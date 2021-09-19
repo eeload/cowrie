@@ -13,13 +13,14 @@ from cowrie.shell.fs import A_REALFILE
 commands = {}
 
 
-class command_tar(HoneyPotCommand):
+class Command_tar(HoneyPotCommand):
     def mkfullpath(self, path, f):
         l, d = path.split("/"), []
         while len(l):
             d.append(l.pop(0))
-            if not self.fs.exists("/".join(d)):
-                self.fs.mkdir("/".join(d), 0, 0, 4096, f.mode, f.mtime)
+            p = "/".join(d)
+            if p and not self.fs.exists(p):
+                self.fs.mkdir(p, 0, 0, 4096, f.mode, f.mtime)
 
     def call(self):
         if len(self.args) < 2:
@@ -38,7 +39,7 @@ class command_tar(HoneyPotCommand):
 
         path = self.fs.resolve_path(filename, self.protocol.cwd)
         if not path or not self.protocol.fs.exists(path):
-            self.write("tar: %s: Cannot open: No such file or directory\n" % filename)
+            self.write(f"tar: {filename}: Cannot open: No such file or directory\n")
             self.write("tar: Error is not recoverable: exiting now\n")
             self.write("tar: Child returned status 2\n")
             self.write("tar: Error exit delayed from previous errors\n")
@@ -74,5 +75,5 @@ class command_tar(HoneyPotCommand):
                 log.msg(f"tar: skipping [{f.name}]")
 
 
-commands["/bin/tar"] = command_tar
-commands["tar"] = command_tar
+commands["/bin/tar"] = Command_tar
+commands["tar"] = Command_tar

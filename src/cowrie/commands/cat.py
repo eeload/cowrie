@@ -17,7 +17,7 @@ from cowrie.shell.fs import FileNotFound
 commands = {}
 
 
-class command_cat(HoneyPotCommand):
+class Command_cat(HoneyPotCommand):
     """
     cat command
     """
@@ -82,7 +82,7 @@ class command_cat(HoneyPotCommand):
         elif isinstance(input, bytes):
             pass
         else:
-            log.msg("unusual cat input {}".format(repr(input)))
+            log.msg(f"unusual cat input {repr(input)}")
 
         lines = input.split(b"\n")
         if lines[-1] == b"":
@@ -143,5 +143,5 @@ or available locally via: info '(coreutils) cat invocation'
         )
 
 
-commands["/bin/cat"] = command_cat
-commands["cat"] = command_cat
+commands["/bin/cat"] = Command_cat
+commands["cat"] = Command_cat

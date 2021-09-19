@@ -5,7 +5,7 @@
 import random
 import re
 
-from twisted.internet import defer, reactor
+from twisted.internet import defer, reactor  # type: ignore
 from twisted.internet.defer import inlineCallbacks
 
 from cowrie.shell.command import HoneyPotCommand
@@ -13,17 +13,17 @@ from cowrie.shell.command import HoneyPotCommand
 commands = {}
 
 
-class command_faked_package_class_factory:
+class Command_faked_package_class_factory:
     @staticmethod
     def getCommand(name):
-        class command_faked_installation(HoneyPotCommand):
+        class Command_faked_installation(HoneyPotCommand):
             def call(self):
                 self.write(f"{name}: Segmentation fault\n")
 
-        return command_faked_installation
+        return Command_faked_installation
 
 
-class command_aptget(HoneyPotCommand):
+class Command_aptget(HoneyPotCommand):
     """
     apt-get fake
     suppports only the 'install PACKAGE' command & 'moo'.
@@ -143,7 +143,7 @@ pages for more information and options.
         )
         self.write("Need to get %s.2kB of archives.\n" % (totalsize))
         self.write(
-            "After this operation, {}kB of additional disk space will be used.\n".format(
+            "After this operation, {:.1f}kB of additional disk space will be used.\n".format(
                 totalsize * 2.2
             )
         )
@@ -155,7 +155,7 @@ pages for more information and options.
             )
             i += 1
             yield self.sleep(1, 2)
-        self.write("Fetched %s.2kB in 1s (4493B/s)\n" % (totalsize))
+        self.write(f"Fetched {totalsize}.2kB in 1s (4493B/s)\n")
         self.write("Reading package fields... Done\n")
         yield self.sleep(1, 2)
         self.write("Reading package status... Done\n")
@@ -177,7 +177,7 @@ pages for more information and options.
             self.fs.mkfile("/usr/bin/%s" % p, 0, 0, random.randint(10000, 90000), 33188)
             self.protocol.commands[
                 "/usr/bin/%s" % p
-            ] = command_faked_package_class_factory.getCommand(p)
+            ] = Command_faked_package_class_factory.getCommand(p)
             yield self.sleep(2)
         self.exit()
 
@@ -199,5 +199,5 @@ pages for more information and options.
         self.exit()
 
 
-commands["/usr/bin/apt-get"] = command_aptget
-commands["apt-get"] = command_aptget
+commands["/usr/bin/apt-get"] = Command_aptget
+commands["apt-get"] = Command_aptget

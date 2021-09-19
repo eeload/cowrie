@@ -8,14 +8,14 @@ This module contains the sleep command
 
 import re
 
-from twisted.internet import reactor
+from twisted.internet import reactor  # type: ignore
 
 from cowrie.shell.command import HoneyPotCommand
 
 commands = {}
 
 
-class command_sleep(HoneyPotCommand):
+class Command_sleep(HoneyPotCommand):
     """
     Sleep
     """
@@ -40,5 +40,5 @@ class command_sleep(HoneyPotCommand):
             self.exit()
 
 
-commands["/bin/sleep"] = command_sleep
-commands["sleep"] = command_sleep
+commands["/bin/sleep"] = Command_sleep
+commands["sleep"] = Command_sleep

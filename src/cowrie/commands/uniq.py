@@ -10,7 +10,6 @@ from twisted.python import log
 
 from cowrie.shell.command import HoneyPotCommand
 
-
 commands = {}
 
 UNIQ_HELP = """Usage: uniq [OPTION]... [INPUT [OUTPUT]]
@@ -50,7 +49,7 @@ or available locally via: info '(coreutils) uniq invocation'
 """
 
 
-class command_uniq(HoneyPotCommand):
+class Command_uniq(HoneyPotCommand):
 
     last_line = None
 
@@ -84,5 +83,5 @@ class command_uniq(HoneyPotCommand):
             self.last_line = line
 
 
-commands["/usr/bin/uniq"] = command_uniq
-commands["uniq"] = command_uniq
+commands["/usr/bin/uniq"] = Command_uniq
+commands["uniq"] = Command_uniq

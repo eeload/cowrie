@@ -9,7 +9,7 @@ from cowrie.shell.command import HoneyPotCommand
 commands = {}
 
 
-class command_last(HoneyPotCommand):
+class Command_last(HoneyPotCommand):
     def call(self):
         line = list(self.args)
         while len(line):
@@ -33,15 +33,16 @@ class command_last(HoneyPotCommand):
 
         self.write("\n")
         self.write(
-            "wtmp begins %s\n"
-            % time.strftime(
-                "%a %b %d %H:%M:%S %Y",
-                time.localtime(
-                    self.protocol.logintime // (3600 * 24) * (3600 * 24) + 63
-                ),
+            "wtmp begins {}\n".format(
+                time.strftime(
+                    "%a %b %d %H:%M:%S %Y",
+                    time.localtime(
+                        self.protocol.logintime // (3600 * 24) * (3600 * 24) + 63
+                    ),
+                )
             )
         )
 
 
-commands["/usr/bin/last"] = command_last
-commands["last"] = command_last
+commands["/usr/bin/last"] = Command_last
+commands["last"] = Command_last

@@ -14,7 +14,7 @@ from cowrie.shell.pwd import Group, Passwd
 commands = {}
 
 
-class command_ls(HoneyPotCommand):
+class Command_ls(HoneyPotCommand):
     def uid2name(self, uid):
         try:
             return Passwd().getpwuid(uid)["pw_name"]
@@ -174,7 +174,7 @@ class command_ls(HoneyPotCommand):
                 perms[0] = "d"
             elif file[fs.A_TYPE] == fs.T_LINK:
                 perms[0] = "l"
-                linktarget = " -> {}".format(file[fs.A_TARGET])
+                linktarget = f" -> {file[fs.A_TARGET]}"
 
             perms = "".join(perms)
             ctime = time.localtime(file[fs.A_CTIME])
@@ -192,7 +192,7 @@ class command_ls(HoneyPotCommand):
             self.write(f"{line}\n")
 
 
-commands["/bin/ls"] = command_ls
-commands["ls"] = command_ls
-commands["/bin/dir"] = command_ls
-commands["dir"] = command_ls
+commands["/bin/ls"] = Command_ls
+commands["ls"] = Command_ls
+commands["/bin/dir"] = Command_ls
+commands["dir"] = Command_ls

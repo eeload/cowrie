@@ -19,7 +19,7 @@ Swap:{SwapTotal:>14}{calc_swap_used:>12}{SwapFree:>12}
 """
 
 
-class command_free(HoneyPotCommand):
+class Command_free(HoneyPotCommand):
     """
     free
     """
@@ -74,9 +74,7 @@ class command_free(HoneyPotCommand):
                     current_magnitude += 1
 
                 # Format to string and append value with new magnitude
-                raw_mem_stats[key] = str(
-                    "{:g}{}".format(value, magnitude[current_magnitude])
-                )
+                raw_mem_stats[key] = str(f"{value:g}{magnitude[current_magnitude]}")
 
         # Write the output to screen
         self.write(FREE_OUTPUT.format(**raw_mem_stats))
@@ -108,5 +106,5 @@ class command_free(HoneyPotCommand):
         return mem_info_map
 
 
-commands["/usr/bin/free"] = command_free
-commands["free"] = command_free
+commands["/usr/bin/free"] = Command_free
+commands["free"] = Command_free

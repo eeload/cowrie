@@ -3,6 +3,7 @@
 
 
 import getopt
+import ipaddress
 import os
 import time
 
@@ -173,7 +174,7 @@ Options: (H) means HTTP/HTTPS only, (F) means FTP only
  """
 
 
-class command_curl(HoneyPotCommand):
+class Command_curl(HoneyPotCommand):
     """
     curl command
     """
@@ -236,9 +237,7 @@ class command_curl(HoneyPotCommand):
             outfile = self.fs.resolve_path(outfile, self.protocol.cwd)
             path = os.path.dirname(outfile)
             if not path or not self.fs.exists(path) or not self.fs.isdir(path):
-                self.write(
-                    "curl: %s: Cannot open: No such file or directory\n" % outfile
-                )
+                self.write(f"curl: {outfile}: Cannot open: No such file or directory\n")
                 self.exit()
                 return
 
@@ -254,9 +253,10 @@ class command_curl(HoneyPotCommand):
             self.deferred.addErrback(self.error, url)
 
     def download(self, url, fakeoutfile, outputfile, *args, **kwargs):
+        scheme: bytes
         try:
             parsed = compat.urllib_parse.urlparse(url)
-            scheme: bytes = parsed.scheme
+            scheme = parsed.scheme
             host: str = parsed.hostname.decode("utf8")
             port: int = parsed.port or (443 if scheme == "https" else 80)
             if scheme != b"http" and scheme != b"https":
@@ -267,6 +267,14 @@ class command_curl(HoneyPotCommand):
             )
             self.exit()
             return None
+
+        # TODO: need to do full name resolution in case someon passes DNS name pointing to local address
+        try:
+            if ipaddress.ip_address(host).is_private:
+                self.errorWrite("curl: (6) Could not resolve host: {}\n".format(host))
+                return None
+        except ValueError:
+            pass
 
         factory = HTTPProgressDownloader(
             self, fakeoutfile, url, outputfile, *args, **kwargs
@@ -378,7 +386,7 @@ class HTTPProgressDownloader(client.HTTPDownloader):
             self.currentlength = 0.0
 
             if self.curl.limit_size > 0 and self.totallength > self.curl.limit_size:
-                log.msg("Not saving URL (%s) due to file size limit" % self.curl.url)
+                log.msg(f"Not saving URL ({self.curl.url}) due to file size limit")
                 self.fileName = os.path.devnull
                 self.nomore = True
 
@@ -430,5 +438,5 @@ class HTTPProgressDownloader(client.HTTPDownloader):
         return client.HTTPDownloader.pageEnd(self)
 
 
-commands["/usr/bin/curl"] = command_curl
-commands["curl"] = command_curl
+commands["/usr/bin/curl"] = Command_curl
+commands["curl"] = Command_curl

@@ -40,21 +40,24 @@ class ExecTerm(base_protocol.BaseProtocol):
     def __init__(self, uuid, channelName, ssh, channelId, command):
         super().__init__(uuid, channelName, ssh)
 
-        log.msg(
-            eventid="cowrie.command.input",
-            input=command.decode("ascii"),
-            format="CMD: %(input)s",
-        )
+        try:
+            log.msg(
+                eventid="cowrie.command.input",
+                input=command.decode("utf8"),
+                format="CMD: %(input)s",
+            )
+        except UnicodeDecodeError:
+            log.err("Unusual execcmd: {}".format(repr(command)))
 
         self.transportId = ssh.server.transportId
         self.channelId = channelId
 
-        self.startTime = time.time()
-        self.ttylogPath = CowrieConfig.get("honeypot", "ttylog_path")
-        self.ttylogEnabled = CowrieConfig.getboolean(
+        self.startTime: float = time.time()
+        self.ttylogPath: str = CowrieConfig.get("honeypot", "ttylog_path")
+        self.ttylogEnabled: bool = CowrieConfig.getboolean(
             "honeypot", "ttylog", fallback=True
         )
-        self.ttylogSize = 0
+        self.ttylogSize: bool = 0
 
         if self.ttylogEnabled:
             self.ttylogFile = "{}/{}-{}-{}e.log".format(

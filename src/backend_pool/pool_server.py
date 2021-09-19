@@ -3,24 +3,26 @@
 
 import struct
 
-from backend_pool.nat import NATService
-from backend_pool.pool_service import NoAvailableVMs, PoolService
-
-from twisted.internet.protocol import Factory
-from twisted.internet.protocol import Protocol
+from twisted.internet.protocol import Factory, Protocol
 from twisted.python import log
 
+from backend_pool.nat import NATService
+from backend_pool.pool_service import NoAvailableVMs, PoolService
 from cowrie.core.config import CowrieConfig
 
 
 class PoolServer(Protocol):
     def __init__(self, factory):
         self.factory = factory
-        self.local_pool = CowrieConfig.get("proxy", "pool", fallback="local") == "local"
-        self.pool_only = CowrieConfig.getboolean(
+        self.local_pool: bool = (
+            CowrieConfig.get("proxy", "pool", fallback="local") == "local"
+        )
+        self.pool_only: bool = CowrieConfig.getboolean(
             "backend_pool", "pool_only", fallback=False
         )
-        self.use_nat = CowrieConfig.getboolean("backend_pool", "use_nat", fallback=True)
+        self.use_nat: bool = CowrieConfig.getboolean(
+            "backend_pool", "use_nat", fallback=True
+        )
 
         if self.use_nat:
             self.nat_public_ip = CowrieConfig.get("backend_pool", "nat_public_ip")
@@ -104,7 +106,7 @@ class PoolServer(Protocol):
                         guest_snapshot.encode(),
                     )
                 else:
-                    fmt = "!cIIH{}sHHH{}s".format(len(guest_ip), len(guest_snapshot))
+                    fmt = f"!cIIH{len(guest_ip)}sHHH{len(guest_snapshot)}s"
                     response = struct.pack(
                         fmt,
                         b"r",

@@ -9,7 +9,7 @@ import socket
 import time
 from typing import Callable, List
 
-from twisted.internet import reactor
+from twisted.internet import reactor  # type: ignore
 from twisted.python import log
 
 from cowrie.core.config import CowrieConfig
@@ -29,7 +29,7 @@ OUTPUT = [
 ]
 
 
-class command_ssh(HoneyPotCommand):
+class Command_ssh(HoneyPotCommand):
     """
     ssh
     """
@@ -138,9 +138,7 @@ class command_ssh(HoneyPotCommand):
                 self.protocol.hostname
             )
         )
-        self.write(
-            "Last login: {} from 192.168.9.4\n".format(time.ctime(time.time() - 123123))
-        )
+        self.write(f"Last login: {time.ctime(time.time() - 123123)} from 192.168.9.4\n")
         self.exit()
 
     def lineReceived(self, line):
@@ -149,5 +147,5 @@ class command_ssh(HoneyPotCommand):
             self.callbacks.pop(0)(line)
 
 
-commands["/usr/bin/ssh"] = command_ssh
-commands["ssh"] = command_ssh
+commands["/usr/bin/ssh"] = Command_ssh
+commands["ssh"] = Command_ssh

@@ -15,7 +15,7 @@ from cowrie.shell.command import HoneyPotCommand
 commands = {}
 
 
-class command_perl(HoneyPotCommand):
+class Command_perl(HoneyPotCommand):
     def version(self):
         output = (
             "",
@@ -100,8 +100,9 @@ class command_perl(HoneyPotCommand):
                 self.exit()
             else:
                 self.write(
-                    'Can\'t open perl script "%s": No such file or directory\n'
-                    % (value)
+                    'Can\'t open perl script "{}": No such file or directory\n'.format(
+                        value
+                    )
                 )
                 self.exit()
 
@@ -120,5 +121,5 @@ class command_perl(HoneyPotCommand):
         self.exit()
 
 
-commands["/usr/bin/perl"] = command_perl
-commands["perl"] = command_perl
+commands["/usr/bin/perl"] = Command_perl
+commands["perl"] = Command_perl

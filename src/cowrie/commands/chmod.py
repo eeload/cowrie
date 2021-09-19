@@ -7,7 +7,6 @@ import re
 
 from cowrie.shell.command import HoneyPotCommand
 
-
 commands = {}
 
 CHMOD_HELP = """Usage: chmod [OPTION]... MODE[,MODE]... FILE...
@@ -46,7 +45,7 @@ MODE_REGEX = "^[ugoa]*([-+=]([rwxXst]*|[ugo]))+|[-+=]?[0-7]+$"
 TRY_CHMOD_HELP_MSG = "Try 'chmod --help' for more information.\n"
 
 
-class command_chmod(HoneyPotCommand):
+class Command_chmod(HoneyPotCommand):
     def call(self):
         # parse the command line arguments
         opts, mode, files, getopt_err = self.parse_args()
@@ -141,5 +140,5 @@ class command_chmod(HoneyPotCommand):
         return opts, mode, files, False
 
 
-commands["/bin/chmod"] = command_chmod
-commands["chmod"] = command_chmod
+commands["/bin/chmod"] = Command_chmod
+commands["chmod"] = Command_chmod

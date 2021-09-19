@@ -9,7 +9,7 @@ from cowrie.shell.command import HoneyPotCommand
 commands = {}
 
 
-class command_base64(HoneyPotCommand):
+class Command_base64(HoneyPotCommand):
     """
     author: Ivan Korolev (@fe7ch)
     """
@@ -103,9 +103,7 @@ Try 'base64 --help' for more information.
                     self.dojob(self.fs.file_contents(pname))
                 except Exception as e:
                     print(str(e))
-                    self.errorWrite(
-                        "base64: {}: No such file or directory\n".format(args[0])
-                    )
+                    self.errorWrite(f"base64: {args[0]}: No such file or directory\n")
             else:
                 self.errorWrite("base64: read error: Is a directory\n")
 
@@ -145,5 +143,5 @@ Try 'base64 --help' for more information.
         self.exit()
 
 
-commands["/usr/bin/base64"] = command_base64
-commands["base64"] = command_base64
+commands["/usr/bin/base64"] = Command_base64
+commands["base64"] = Command_base64

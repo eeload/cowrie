@@ -3,6 +3,7 @@
 
 
 import getopt
+import ipaddress
 import os
 import time
 
@@ -28,18 +29,18 @@ def tdiff(seconds):
 
     s = "%ds" % (int(t),)
     if minutes >= 1:
-        s = "%dm %s" % (minutes, s)
+        s = f"{minutes}m {s}"
     if hours >= 1:
-        s = "%dh %s" % (hours, s)
+        s = f"{hours}h {s}"
     if days >= 1:
-        s = "%dd %s" % (days, s)
+        s = f"{days}d {s}"
     return s
 
 
 def sizeof_fmt(num):
     for x in ["bytes", "K", "M", "G", "T"]:
         if num < 1024.0:
-            return "%d%s" % (num, x)
+            return f"{num}{x}"
         num /= 1024.0
 
 
@@ -50,7 +51,7 @@ def splitthousands(s, sep=","):
     return splitthousands(s[:-3], sep) + sep + s[-3:]
 
 
-class command_wget(HoneyPotCommand):
+class Command_wget(HoneyPotCommand):
     """
     wget command
     """
@@ -60,6 +61,7 @@ class command_wget(HoneyPotCommand):
     quiet: bool = False
 
     def start(self):
+        url: str
         try:
             optlist, args = getopt.getopt(self.args, "cqO:P:", ["header="])
         except getopt.GetoptError:
@@ -68,7 +70,7 @@ class command_wget(HoneyPotCommand):
             return
 
         if len(args):
-            url: str = args[0].strip()
+            url = args[0].strip()
         else:
             self.errorWrite("wget: missing URL\n")
             self.errorWrite("Usage: wget [OPTION]... [URL]...\n\n")
@@ -94,7 +96,7 @@ class command_wget(HoneyPotCommand):
             pass
 
         if "://" not in url:
-            url = "http://%s" % url
+            url = f"http://{url}"
 
         urldata = compat.urllib_parse.urlparse(url)
 
@@ -110,7 +112,9 @@ class command_wget(HoneyPotCommand):
             path = os.path.dirname(self.outfile)
             if not path or not self.fs.exists(path) or not self.fs.isdir(path):
                 self.errorWrite(
-                    "wget: %s: Cannot open: No such file or directory\n" % self.outfile
+                    "wget: {}: Cannot open: No such file or directory\n".format(
+                        self.outfile
+                    )
                 )
                 self.exit()
                 return
@@ -140,18 +144,31 @@ class command_wget(HoneyPotCommand):
             self.errorWrite(f"{url}: Unsupported scheme.\n")
             return None
 
-        # File in host's fs that will hold content of the downloaded file
-        # HTTPDownloader will close() the file object so need to preserve the name
-        self.artifactFile = Artifact(self.outfile)
-
         if not self.quiet:
             self.errorWrite(
                 "--{}--  {}\n".format(
                     time.strftime("%Y-%m-%d %H:%M:%S"), url.decode("utf8")
                 )
             )
-            self.errorWrite("Connecting to %s:%d... connected.\n" % (host, port))
+            self.errorWrite(f"Connecting to {host}:{port}... connected.\n")
             self.errorWrite("HTTP request sent, awaiting response... ")
+
+        # TODO: need to do full name resolution.
+        try:
+            if ipaddress.ip_address(host).is_private:
+                self.errorWrite(
+                    "Resolving {} ({})... failed: nodename nor servname provided, or not known.\n".format(
+                        host, host
+                    )
+                )
+            self.errorWrite("wget: unable to resolve host address ‘{}’\n".format(host))
+            return None
+        except ValueError:
+            pass
+
+        # File in host's fs that will hold content of the downloaded file
+        # HTTPDownloader will close() the file object so need to preserve the name
+        self.artifactFile = Artifact(self.outfile)
 
         factory = HTTPProgressDownloader(
             self, fakeoutfile, url, self.artifactFile, *args, **kwargs
@@ -258,7 +275,7 @@ class command_wget(HoneyPotCommand):
             try:
                 self.protocol.logDispatch(
                     eventid="cowrie.session.file_download.failed",
-                    format="Attempt to download file(s) from URL (%(url)s) failed",
+                    format="Attempt to download file(s) from URL (%(self.url)s) failed",
                     url=self.url,
                 )
             except Exception:
@@ -349,7 +366,7 @@ class HTTPProgressDownloader(client.HTTPDownloader):
                 percent = int(self.currentlength / self.totallength * 100)
                 spercent = f"{percent}%"
             else:
-                spercent = "%dK" % (self.currentlength / 1000)
+                spercent = f"{self.currentlength / 1000}K"
                 percent = 0
             self.speed = self.currentlength / (time.time() - self.started)
             eta = (self.totallength - self.currentlength) / self.speed
@@ -395,7 +412,7 @@ class HTTPProgressDownloader(client.HTTPDownloader):
         return client.HTTPDownloader.pageEnd(self)
 
 
-commands["/usr/bin/wget"] = command_wget
-commands["wget"] = command_wget
-commands["/usr/bin/dget"] = command_wget
-commands["dget"] = command_wget
+commands["/usr/bin/wget"] = Command_wget
+commands["wget"] = Command_wget
+commands["/usr/bin/dget"] = Command_wget
+commands["dget"] = Command_wget
